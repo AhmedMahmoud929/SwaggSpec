@@ -1,5 +1,6 @@
 import { initInjection } from './inject';
 import { startObserver } from './observer';
+import '../../styles/copy-button.css';
 
 async function main(): Promise<void> {
   await initInjection();
