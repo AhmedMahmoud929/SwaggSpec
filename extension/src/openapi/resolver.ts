@@ -171,18 +171,55 @@ export function findOperation(
   path: string,
 ): ResolvedOperation | null {
   const normalizedMethod = method.toLowerCase() as HttpMethod;
-  const pathItem = spec.paths?.[path];
-  if (!pathItem) return null;
+  const methodUpper = method.toUpperCase();
 
-  const operation = pathItem[normalizedMethod];
-  if (!operation) return null;
-
-  return {
-    method: method.toUpperCase(),
-    path,
-    operation,
-    operationKey: operation.operationId ?? `${method.toUpperCase()}:${path}`,
+  const tryPath = (specPath: string): ResolvedOperation | null => {
+    const pathItem = spec.paths?.[specPath];
+    const operation = pathItem?.[normalizedMethod];
+    if (!operation) return null;
+    return {
+      method: methodUpper,
+      path: specPath,
+      operation,
+      operationKey: operation.operationId ?? `${methodUpper}:${specPath}`,
+    };
   };
+
+  const exact = tryPath(path);
+  if (exact) return exact;
+
+  const withoutTrailing = path.replace(/\/$/, '');
+  if (withoutTrailing !== path) {
+    const match = tryPath(withoutTrailing);
+    if (match) return match;
+  }
+
+  let best: ResolvedOperation | null = null;
+
+  for (const [specPath, pathItem] of Object.entries(spec.paths ?? {})) {
+    const operation = pathItem[normalizedMethod];
+    if (!operation) continue;
+
+    const matches =
+      path.endsWith(specPath) ||
+      specPath.endsWith(path) ||
+      path.includes(specPath);
+
+    if (!matches) continue;
+
+    const candidate: ResolvedOperation = {
+      method: methodUpper,
+      path: specPath,
+      operation,
+      operationKey: operation.operationId ?? `${methodUpper}:${specPath}`,
+    };
+
+    if (!best || specPath.length > best.path.length) {
+      best = candidate;
+    }
+  }
+
+  return best;
 }
 
 export function getTagDescription(spec: OpenAPISpec, tagName: string): string | undefined {

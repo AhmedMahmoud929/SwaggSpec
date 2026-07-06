@@ -1,3 +1,6 @@
+/**
+ * @vitest-environment jsdom
+ */
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { describe, expect, it } from 'vitest';
@@ -95,6 +98,54 @@ describe('buildEndpointMarkdown', () => {
 
     expect(md).toContain('## Security');
     expect(md).toContain('bearerAuth');
+  });
+
+  it('includes schema default as example fallback', () => {
+    const specWithDefault = {
+      ...petstore,
+      paths: {
+        '/pets': {
+          get: {
+            tags: ['pets'],
+            summary: 'List pets',
+            parameters: [
+              {
+                name: 'limit',
+                in: 'query',
+                schema: { type: 'integer', default: 10 },
+              },
+            ],
+            responses: { '200': { description: 'ok' } },
+          },
+        },
+      },
+    } as OpenAPISpec;
+
+    const op = findOperation(specWithDefault, 'GET', '/pets')!;
+    const md = buildEndpointMarkdown(specWithDefault, op);
+
+    expect(md).toContain('`10`');
+  });
+
+  it('merges filled swagger ui values into parameter examples', () => {
+    document.body.innerHTML = `
+      <div class="opblock">
+        <table class="parameters">
+          <tbody>
+            <tr data-param-name="limit" data-param-in="query">
+              <td class="parameters-col_model"><input value="25" /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    const op = findOperation(petstore, 'GET', '/pets')!;
+    const opblock = document.querySelector('.opblock')!;
+    const md = buildEndpointMarkdown(petstore, op, { opblock });
+
+    expect(md).toContain('`25`');
+    expect(md).toContain('## Example Request');
   });
 });
 

@@ -46,7 +46,10 @@ async function onCopyEndpoint(opblock: Element, button: HTMLButtonElement): Prom
   if (spec) {
     const resolved = findOperation(spec, parsed.method, parsed.path);
     if (resolved) {
-      await handleCopy(buildEndpointMarkdown(spec, resolved), button);
+      await handleCopy(
+        buildEndpointMarkdown(spec, resolved, { opblock, displayPath: parsed.path }),
+        button,
+      );
       return;
     }
   }
@@ -62,7 +65,8 @@ async function onCopyController(
   const spec = await resolveOpenAPISpec();
 
   if (spec) {
-    await handleCopy(buildControllerMarkdown(spec, tagName), button);
+    const opblocks = Array.from(section.querySelectorAll('.opblock'));
+    await handleCopy(buildControllerMarkdown(spec, tagName, opblocks), button);
     return;
   }
 

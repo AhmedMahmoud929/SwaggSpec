@@ -88,6 +88,7 @@ export interface SchemaObject {
   additionalProperties?: boolean | SchemaObject;
   description?: string;
   example?: unknown;
+  default?: unknown;
   nullable?: boolean;
 }
 
