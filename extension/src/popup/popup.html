@@ -10,18 +10,34 @@
         padding: 16px;
         width: 280px;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-        color: #24292f;
+        color: #e6edf3;
+        background: #141414;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .header img {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
       }
 
       h1 {
-        margin: 0 0 8px;
-        font-size: 16px;
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+        color: #e6edf3;
       }
 
       p {
         margin: 0 0 16px;
         font-size: 13px;
-        color: #57606a;
+        color: #9da7b3;
         line-height: 1.4;
       }
 
@@ -30,12 +46,16 @@
         align-items: center;
         gap: 8px;
         font-size: 13px;
+        color: #e6edf3;
         cursor: pointer;
       }
     </style>
   </head>
   <body>
-    <h1>Swagger Spec Copy</h1>
+    <div class="header">
+      <img src="../../assets/logo_dark-bg.png" alt="Swagger Spec Copy logo" />
+      <h1>Swagger Spec Copy</h1>
+    </div>
     <p>Copy Swagger controllers and endpoints as Markdown for AI agents.</p>
     <label>
       <input type="checkbox" id="debug" />
