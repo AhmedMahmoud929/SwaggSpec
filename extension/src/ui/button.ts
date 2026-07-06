@@ -1,4 +1,6 @@
-const COPY_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+const COPY_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+
+const CHECK_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>`;
 
 export type ButtonVariant = 'controller' | 'endpoint';
 
@@ -15,6 +17,7 @@ export function createCopyButton(options: CopyButtonOptions): HTMLButtonElement 
   button.type = 'button';
   button.className = `swagg-spec-copy-btn swagg-spec-copy-${options.variant}`;
   button.setAttribute('aria-label', options.label);
+  button.title = options.label;
 
   if (options.tag) button.dataset.tag = options.tag;
   if (options.operationId) button.dataset.operationId = options.operationId;
@@ -25,7 +28,7 @@ export function createCopyButton(options: CopyButtonOptions): HTMLButtonElement 
 
   const text = document.createElement('span');
   text.className = 'swagg-spec-copy-btn__text';
-  text.textContent = options.label;
+  text.textContent = options.variant === 'endpoint' ? 'Copy' : options.label;
 
   button.append(icon, text);
 
@@ -40,17 +43,26 @@ export function createCopyButton(options: CopyButtonOptions): HTMLButtonElement 
 
 export function setButtonCopiedState(button: HTMLButtonElement, copied: boolean): void {
   const text = button.querySelector('.swagg-spec-copy-btn__text');
-  if (!text) return;
+  const icon = button.querySelector('.swagg-spec-copy-btn__icon');
+  if (!text || !icon) return;
 
   if (copied) {
     button.classList.add('swagg-spec-copy-btn--copied');
-    text.textContent = 'Copied!';
+    icon.innerHTML = CHECK_ICON_SVG;
+    text.textContent = 'Copied';
+
     window.setTimeout(() => {
       button.classList.remove('swagg-spec-copy-btn--copied');
-      const variant = button.classList.contains('swagg-spec-copy-controller')
+      icon.innerHTML = COPY_ICON_SVG;
+      text.textContent = button.classList.contains('swagg-spec-copy-controller')
         ? 'Copy Controller'
-        : 'Copy Endpoint';
-      text.textContent = variant;
+        : 'Copy';
     }, 2000);
   }
+}
+
+export function createActionWrapper(variant: ButtonVariant): HTMLDivElement {
+  const wrapper = document.createElement('div');
+  wrapper.className = `swagg-spec-actions swagg-spec-actions--${variant}`;
+  return wrapper;
 }

@@ -1,36 +1,65 @@
+/* ── Shared button base ─────────────────────────────────────────── */
+
 .swagg-spec-copy-btn {
+  all: unset;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-left: 12px;
-  padding: 6px 14px;
-  border: 1px solid #d0d7de;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #24292f;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-  font-size: 13px;
+  justify-content: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid #d1d9e0;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8f9fb 100%);
+  color: #3b4151;
+  font-family: inherit;
+  font-size: 12px !important;
   font-weight: 500;
   line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
   cursor: pointer;
-  vertical-align: middle;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  flex-shrink: 0;
+  user-select: none;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
 }
 
 .swagg-spec-copy-btn:hover {
-  background: #f6f8fa;
-  border-color: #afb8c1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(180deg, #ffffff 0%, #f0f3f7 100%);
+  border-color: #b0bac5;
+  color: #1b1f23;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
 }
 
 .swagg-spec-copy-btn:active {
-  background: #eef1f4;
+  transform: translateY(0);
+  background: #eef1f5;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.swagg-spec-copy-btn:focus-visible {
+  outline: 2px solid #4990e2;
+  outline-offset: 2px;
 }
 
 .swagg-spec-copy-btn--copied {
-  border-color: #1a7f37;
-  color: #1a7f37;
+  background: linear-gradient(180deg, #edf7f0 0%, #e3f2e8 100%) !important;
+  border-color: #49cc90 !important;
+  color: #1a7f4b !important;
+  box-shadow: 0 1px 3px rgba(73, 204, 144, 0.2) !important;
+  transform: none !important;
 }
 
 .swagg-spec-copy-btn__icon {
@@ -38,22 +67,102 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  opacity: 0.75;
+  transition: opacity 0.15s ease;
+}
+
+.swagg-spec-copy-btn:hover .swagg-spec-copy-btn__icon,
+.swagg-spec-copy-btn--copied .swagg-spec-copy-btn__icon {
+  opacity: 1;
 }
 
 .swagg-spec-copy-btn__icon svg {
   display: block;
 }
 
-.swagg-spec-copy-endpoint {
-  margin-left: auto;
+/* ── Action wrappers ────────────────────────────────────────────── */
+
+.swagg-spec-actions {
+  display: inline-flex;
+  align-items: center;
   flex-shrink: 0;
+  z-index: 1;
 }
+
+.swagg-spec-actions--controller {
+  margin-left: 0;
+  padding-right: 8px;
+}
+
+.swagg-spec-tag-spacer {
+  flex: 1 1 auto;
+  min-width: 12px;
+}
+
+.swagg-spec-actions--endpoint {
+  margin-left: auto;
+  padding-left: 8px;
+  padding-right: 4px;
+}
+
+/* ── Controller variant ─────────────────────────────────────────── */
+
+.swagg-spec-copy-controller {
+  height: 26px;
+  padding: 0 9px;
+  font-size: 14px !important;
+  font-weight: 500;
+  gap: 4px;
+}
+
+.swagg-spec-copy-controller .swagg-spec-copy-btn__icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ── Endpoint variant ───────────────────────────────────────────── */
+
+.swagg-spec-copy-endpoint {
+  height: 26px;
+  padding: 0 8px;
+  font-size: 11.5px;
+  border-radius: 5px;
+  opacity: 0;
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.opblock:hover .swagg-spec-copy-endpoint,
+.opblock.is-open .swagg-spec-copy-endpoint,
+.swagg-spec-copy-endpoint:focus-visible,
+.swagg-spec-copy-endpoint.swagg-spec-copy-btn--copied {
+  opacity: 1;
+}
+
+/* ── Swagger DOM integration ────────────────────────────────────── */
 
 .opblock-tag {
   display: flex !important;
   align-items: center !important;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  gap: 0;
+}
+
+.opblock-tag > a.nostyle {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.opblock-tag > small {
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .opblock-summary {
@@ -65,6 +174,8 @@
   flex: 1;
   min-width: 0;
 }
+
+/* ── Toast notifications ───────────────────────────────────────── */
 
 .swagg-spec-toast-container {
   position: fixed;
@@ -78,16 +189,17 @@
 }
 
 .swagg-spec-toast {
-  padding: 12px 16px;
+  padding: 10px 16px;
   border-radius: 8px;
-  background: #24292f;
+  background: #3b4151;
   color: #ffffff;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
   opacity: 0;
   transform: translateY(8px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .swagg-spec-toast--visible {
@@ -96,9 +208,9 @@
 }
 
 .swagg-spec-toast--success {
-  background: #1a7f37;
+  background: #1a7f4b;
 }
 
 .swagg-spec-toast--error {
-  background: #cf222e;
+  background: #c0392b;
 }

@@ -7,7 +7,7 @@ import {
   parseTagFromDom,
   resolveOpenAPISpec,
 } from '../openapi/resolver';
-import { createCopyButton, setButtonCopiedState } from '../ui/button';
+import { createCopyButton, createActionWrapper, setButtonCopiedState } from '../ui/button';
 import { copyToClipboard, showToast } from '../ui/toast';
 
 const CONTROLLER_BTN_SELECTOR = '.swagg-spec-copy-controller';
@@ -75,11 +75,12 @@ function injectControllerButton(section: Element): void {
     section.querySelector('.opblock-tag') ??
     section.querySelector('h3, h4');
 
-  if (!tagHeader || tagHeader.querySelector(CONTROLLER_BTN_SELECTOR)) return;
+  if (!tagHeader || section.querySelector(CONTROLLER_BTN_SELECTOR)) return;
 
   const tagName = parseTagFromDom(section);
   if (!tagName) return;
 
+  const actions = createActionWrapper('controller');
   const button = createCopyButton({
     variant: 'controller',
     label: 'Copy Controller',
@@ -87,7 +88,13 @@ function injectControllerButton(section: Element): void {
     onClick: (btn) => onCopyController(tagName, section, btn),
   });
 
-  tagHeader.appendChild(button);
+  const spacer = document.createElement('span');
+  spacer.className = 'swagg-spec-tag-spacer';
+  spacer.setAttribute('aria-hidden', 'true');
+
+  actions.appendChild(button);
+  tagHeader.appendChild(spacer);
+  tagHeader.appendChild(actions);
   log('Injected controller button for', tagName);
 }
 
@@ -103,6 +110,7 @@ function injectEndpointButton(opblock: Element): void {
   const parsed = parseOperationFromDom(opblock);
   const operationId = parsed ? `${parsed.method}:${parsed.path}` : undefined;
 
+  const actions = createActionWrapper('endpoint');
   const button = createCopyButton({
     variant: 'endpoint',
     label: 'Copy Endpoint',
@@ -110,7 +118,8 @@ function injectEndpointButton(opblock: Element): void {
     onClick: (btn) => onCopyEndpoint(opblock, btn),
   });
 
-  summary.appendChild(button);
+  actions.appendChild(button);
+  summary.appendChild(actions);
   log('Injected endpoint button for', operationId);
 }
 
