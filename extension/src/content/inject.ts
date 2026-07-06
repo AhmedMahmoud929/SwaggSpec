@@ -93,8 +93,15 @@ function injectControllerButton(section: Element): void {
   spacer.setAttribute('aria-hidden', 'true');
 
   actions.appendChild(button);
-  tagHeader.appendChild(spacer);
-  tagHeader.appendChild(actions);
+
+  const expandBtn = tagHeader.querySelector('.expand-operation');
+  if (expandBtn) {
+    tagHeader.insertBefore(actions, expandBtn);
+    tagHeader.insertBefore(spacer, actions);
+  } else {
+    tagHeader.appendChild(spacer);
+    tagHeader.appendChild(actions);
+  }
   log('Injected controller button for', tagName);
 }
 
