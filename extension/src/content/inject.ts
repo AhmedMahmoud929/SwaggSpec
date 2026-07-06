@@ -6,6 +6,7 @@ import {
   parseOperationFromDom,
   parseTagFromDom,
   resolveOpenAPISpec,
+  resolveOpenAPISpecForOperation,
 } from '../openapi/resolver';
 import { createCopyButton, createActionWrapper, setButtonCopiedState } from '../ui/button';
 import { copyToClipboard, showToast } from '../ui/toast';
@@ -42,12 +43,15 @@ async function onCopyEndpoint(opblock: Element, button: HTMLButtonElement): Prom
     return;
   }
 
-  const spec = await resolveOpenAPISpec();
+  const spec = await resolveOpenAPISpecForOperation(parsed.method, parsed.path);
   if (spec) {
     const resolved = findOperation(spec, parsed.method, parsed.path);
     if (resolved) {
       await handleCopy(
-        buildEndpointMarkdown(spec, resolved, { opblock, displayPath: parsed.path }),
+        buildEndpointMarkdown(spec, resolved, {
+          opblock,
+          displayPath: parsed.path,
+        }),
         button,
       );
       return;

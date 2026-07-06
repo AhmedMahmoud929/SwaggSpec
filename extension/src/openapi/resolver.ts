@@ -1,5 +1,10 @@
 import type { HttpMethod, OpenAPISpec, Operation, ResolvedOperation } from './types';
 import { HTTP_METHODS } from './types';
+import { resolveFromSwaggerInitScript, resolveSpecForOperation } from './init-script';
+import { isOpenAPISpec } from './spec-utils';
+
+export { resolveFromSwaggerInitScript, resolveSpecForOperation };
+export { isOpenAPISpec };
 
 interface SwaggerUIWindow extends Window {
   ui?: {
@@ -30,6 +35,7 @@ export async function resolveOpenAPISpec(doc: Document = document): Promise<Open
   cachePromise = (async () => {
     const spec =
       resolveFromSwaggerUI() ??
+      (await resolveFromSwaggerInitScript(doc)) ??
       resolveFromEmbeddedScript(doc) ??
       (await resolveFromSpecUrl()) ??
       null;
@@ -41,17 +47,27 @@ export async function resolveOpenAPISpec(doc: Document = document): Promise<Open
   return cachePromise;
 }
 
+export async function resolveOpenAPISpecForOperation(
+  method: string,
+  path: string,
+  doc: Document = document,
+): Promise<OpenAPISpec | null> {
+  const baseSpec = await resolveOpenAPISpec(doc);
+  if (baseSpec && findOperation(baseSpec, method, path)) {
+    return baseSpec;
+  }
+
+  const targetedSpec = await resolveSpecForOperation(method, path, doc);
+  if (targetedSpec) {
+    cachedSpec = targetedSpec;
+    return targetedSpec;
+  }
+
+  return baseSpec;
+}
+
 function resolveFromSwaggerUI(): OpenAPISpec | null {
   const win = window as SwaggerUIWindow;
-
-  try {
-    const configs = win.ui?.getConfigs?.();
-    if (configs?.spec && isOpenAPISpec(configs.spec)) {
-      return configs.spec;
-    }
-  } catch {
-    // ignore
-  }
 
   try {
     const specJson = win.ui?.specSelectors?.specJson?.();
@@ -66,6 +82,15 @@ function resolveFromSwaggerUI(): OpenAPISpec | null {
     const stateSpec = win.ui?.getState?.()?.spec?.json;
     if (stateSpec && isOpenAPISpec(stateSpec)) {
       return stateSpec;
+    }
+  } catch {
+    // ignore
+  }
+
+  try {
+    const configs = win.ui?.getConfigs?.();
+    if (configs?.spec && isOpenAPISpec(configs.spec)) {
+      return configs.spec;
     }
   } catch {
     // ignore
@@ -135,11 +160,6 @@ async function resolveFromSpecUrl(): Promise<OpenAPISpec | null> {
   }
 }
 
-export function isOpenAPISpec(value: unknown): value is OpenAPISpec {
-  if (!value || typeof value !== 'object') return false;
-  const obj = value as OpenAPISpec;
-  return Boolean(obj.paths && typeof obj.paths === 'object');
-}
 
 export function getAllOperations(spec: OpenAPISpec): ResolvedOperation[] {
   const operations: ResolvedOperation[] = [];
