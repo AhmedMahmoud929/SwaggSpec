@@ -524,3 +524,37 @@
   border-radius: 2px;
   font-style: normal;
 }
+
+/* ── Active & Scrollspy Highlights ────────────────────────────────── */
+
+/* Active sidebar item with left border accent, avoiding layout shifts */
+.swagg-spec-sidebar__endpoint.swagg-spec-sidebar__endpoint--active {
+  background: var(--ss-accent-hv-bg2);
+  color: var(--ss-text-accent);
+  font-weight: 600;
+  border-left: 3px solid var(--ss-accent);
+  padding-left: 23px; /* 26px original padding - 3px border */
+}
+
+/* Subtle active highlight on the Swagger page .opblock */
+.swagg-spec-opblock--active {
+  box-shadow: 0 0 0 3px #49cc90, 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+  transform: translateY(-2px);
+  z-index: 10;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+/* Temporary pulse/glow animation when scrolled-to on sidebar click */
+.swagg-spec-opblock--pulse {
+  animation: swagg-spec-pulse-glow 1.5s ease-out;
+}
+
+@keyframes swagg-spec-pulse-glow {
+  0% {
+    box-shadow: 0 0 0 6px #49cc90, 0 12px 30px rgba(73, 204, 144, 0.4) !important;
+  }
+  100% {
+    box-shadow: 0 0 0 0px transparent, 0 0 0 transparent !important;
+  }
+}

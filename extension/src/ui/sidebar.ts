@@ -40,6 +40,12 @@ let searchEl: HTMLInputElement | null = null;
 let currentGroups: TagGroup[] = [];
 let isOpen = true;
 
+// Scrollspy variables
+let activeObserver: IntersectionObserver | null = null;
+const visibleOpblocks = new Set<Element>();
+let currentActiveOpblock: Element | null = null;
+
+
 /* ─── Helpers ─────────────────────────────────────────────── */
 
 function isMobile(): boolean {
@@ -263,6 +269,15 @@ function scrollToEndpoint(method: string, path: string): void {
       parsed.path === path
     ) {
       opblock.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Trigger temporary pulse highlight
+      opblock.classList.remove('swagg-spec-opblock--pulse');
+      void (opblock as HTMLElement).offsetWidth; // force reflow to restart CSS keyframe animation
+      opblock.classList.add('swagg-spec-opblock--pulse');
+
+      setTimeout(() => {
+        opblock.classList.remove('swagg-spec-opblock--pulse');
+      }, 1500);
 
       // Also expand it if collapsed
       const isCollapsed = !opblock.classList.contains('is-open');
@@ -542,6 +557,8 @@ function renderGroups(groups: TagGroup[], query = ''): void {
         const row = document.createElement('button');
         row.className = 'swagg-spec-sidebar__endpoint';
         row.type = 'button';
+        row.dataset.method = op.method.toUpperCase();
+        row.dataset.path = op.path;
         row.setAttribute(
           'aria-label',
           `${op.method} ${op.path}${op.operation.summary ? ': ' + op.operation.summary : ''}`,
@@ -582,7 +599,10 @@ function renderGroups(groups: TagGroup[], query = ''): void {
     empty.textContent = `No results for "${query}"`;
     listEl.appendChild(empty);
   }
+
+  updateScrollSpy();
 }
+
 
 /* ─── Filter ─────────────────────────────────────────────────────── */
 
@@ -628,3 +648,124 @@ export async function refreshSidebar(): Promise<void> {
   if (!sidebarEl) return; // sidebar not yet built
   await populate();
 }
+
+/* ─── Scrollspy Functions ────────────────────────────────────────── */
+
+function determineActiveEndpoint(): void {
+  if (visibleOpblocks.size === 0) {
+    // If none are in the viewport, find the one closest to the top
+    const opblocks = Array.from(document.querySelectorAll('.opblock'));
+    let closest: Element | null = null;
+    let closestDist = Infinity;
+
+    opblocks.forEach((op) => {
+      const rect = op.getBoundingClientRect();
+      const dist = Math.abs(rect.top - 100);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closest = op;
+      }
+    });
+
+    setActiveElement(closest);
+    return;
+  }
+
+  // From the visible ones, pick the one closest to the top of the viewport
+  let closest: Element | null = null;
+  let closestTop = Infinity;
+
+  visibleOpblocks.forEach((op) => {
+    const rect = op.getBoundingClientRect();
+    if (rect.top >= 0 && rect.top < closestTop) {
+      closestTop = rect.top;
+      closest = op;
+    }
+  });
+
+  if (closest) {
+    setActiveElement(closest);
+  }
+}
+
+function setActiveElement(opblock: Element | null): void {
+  if (currentActiveOpblock === opblock) return;
+
+  // Remove active class from previous opblock on the page
+  if (currentActiveOpblock) {
+    currentActiveOpblock.classList.remove('swagg-spec-opblock--active');
+  }
+
+  // Remove active class from all sidebar links
+  const activeSidebarBtns = sidebarEl?.querySelectorAll('.swagg-spec-sidebar__endpoint--active');
+  activeSidebarBtns?.forEach((btn) => {
+    btn.classList.remove('swagg-spec-sidebar__endpoint--active');
+  });
+
+  currentActiveOpblock = opblock;
+
+  if (!opblock) return;
+
+  // Add active class to page element
+  opblock.classList.add('swagg-spec-opblock--active');
+
+  // Find parsed method/path
+  const parsed = parseOperationFromDom(opblock);
+  if (parsed) {
+    // Find the button in sidebar
+    const btn = sidebarEl?.querySelector(
+      `.swagg-spec-sidebar__endpoint[data-method="${parsed.method.toUpperCase()}"][data-path="${parsed.path}"]`
+    );
+    if (btn) {
+      btn.classList.add('swagg-spec-sidebar__endpoint--active');
+
+      // Scroll the sidebar button into view so it follows the scroll
+      btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      // Auto-expand the parent <details> tag if it is collapsed
+      const details = btn.closest('details.swagg-spec-sidebar__group');
+      if (details && !details.hasAttribute('open')) {
+        details.setAttribute('open', '');
+      }
+    }
+  }
+}
+
+export function updateScrollSpy(): void {
+  // Disconnect existing observer if any
+  if (activeObserver) {
+    activeObserver.disconnect();
+  }
+  visibleOpblocks.clear();
+
+  if (!sidebarEl) return;
+
+  const opblocks = document.querySelectorAll('.opblock');
+  if (opblocks.length === 0) return;
+
+  activeObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          visibleOpblocks.add(entry.target);
+        } else {
+          visibleOpblocks.delete(entry.target);
+        }
+      });
+
+      determineActiveEndpoint();
+    },
+    {
+      root: null,
+      rootMargin: '-80px 0px -60% 0px', // Focus on the upper-middle viewport
+    }
+  );
+
+  opblocks.forEach((op) => {
+    activeObserver?.observe(op);
+  });
+
+  // Run initial check
+  determineActiveEndpoint();
+}
+
