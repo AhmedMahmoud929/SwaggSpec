@@ -44,6 +44,9 @@ let isOpen = true;
 let activeObserver: IntersectionObserver | null = null;
 const visibleOpblocks = new Set<Element>();
 let currentActiveOpblock: Element | null = null;
+let isProgrammaticScrolling = false;
+let programmaticScrollTimeout: number | null = null;
+
 
 
 /* ─── Helpers ─────────────────────────────────────────────── */
@@ -51,6 +54,11 @@ let currentActiveOpblock: Element | null = null;
 function isMobile(): boolean {
   return window.matchMedia('(max-width: 768px)').matches;
 }
+
+function normalizePath(p: string): string {
+  return p.replace(/\u200b/g, '').replace(/\/$/, '').trim();
+}
+
 
 /* ─── Theme detection ───────────────────────────────────────── */
 
@@ -241,15 +249,27 @@ function scrollToController(tagName: string): void {
       found = true;
       expandControllerSection(section);
       
+      // Disable Scrollspy during scroll
+      isProgrammaticScrolling = true;
+      if (programmaticScrollTimeout !== null) {
+        window.clearTimeout(programmaticScrollTimeout);
+      }
+
       // Wait for expand animation/rendering to settle before scrolling
       setTimeout(() => {
         const firstOp = section.querySelector('.opblock');
         console.log('[swagg-spec] Scrolling to target. First endpoint found:', firstOp);
         if (firstOp) {
+          setActiveElement(firstOp);
           firstOp.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } else {
           section.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+
+        programmaticScrollTimeout = window.setTimeout(() => {
+          isProgrammaticScrolling = false;
+          programmaticScrollTimeout = null;
+        }, 1000);
       }, 150);
       return;
     }
@@ -261,13 +281,22 @@ function scrollToController(tagName: string): void {
 
 function scrollToEndpoint(method: string, path: string): void {
   const opblocks = document.querySelectorAll('.opblock');
+  const targetPath = normalizePath(path);
   for (const opblock of opblocks) {
     const parsed = parseOperationFromDom(opblock);
     if (
       parsed &&
       parsed.method.toLowerCase() === method.toLowerCase() &&
-      parsed.path === path
+      normalizePath(parsed.path) === targetPath
     ) {
+      // Set active immediately to prevent Scrollspy interference
+      setActiveElement(opblock);
+
+      isProgrammaticScrolling = true;
+      if (programmaticScrollTimeout !== null) {
+        window.clearTimeout(programmaticScrollTimeout);
+      }
+
       opblock.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
       // Trigger temporary pulse highlight
@@ -287,6 +316,11 @@ function scrollToEndpoint(method: string, path: string): void {
         );
         summaryBtn?.click();
       }
+
+      programmaticScrollTimeout = window.setTimeout(() => {
+        isProgrammaticScrolling = false;
+        programmaticScrollTimeout = null;
+      }, 1000);
       return;
     }
   }
@@ -652,6 +686,8 @@ export async function refreshSidebar(): Promise<void> {
 /* ─── Scrollspy Functions ────────────────────────────────────────── */
 
 function determineActiveEndpoint(): void {
+  if (isProgrammaticScrolling) return;
+
   if (visibleOpblocks.size === 0) {
     // If none are in the viewport, find the one closest to the top
     const opblocks = Array.from(document.querySelectorAll('.opblock'));
@@ -712,10 +748,15 @@ function setActiveElement(opblock: Element | null): void {
   // Find parsed method/path
   const parsed = parseOperationFromDom(opblock);
   if (parsed) {
-    // Find the button in sidebar
-    const btn = sidebarEl?.querySelector(
-      `.swagg-spec-sidebar__endpoint[data-method="${parsed.method.toUpperCase()}"][data-path="${parsed.path}"]`
-    );
+    const targetMethod = parsed.method.toUpperCase();
+    const targetPath = normalizePath(parsed.path);
+    const buttons = sidebarEl?.querySelectorAll<HTMLButtonElement>('.swagg-spec-sidebar__endpoint');
+    const btn = Array.from(buttons ?? []).find((b) => {
+      const bMethod = b.dataset.method;
+      const bPath = b.dataset.path;
+      return bMethod === targetMethod && bPath && normalizePath(bPath) === targetPath;
+    });
+
     if (btn) {
       btn.classList.add('swagg-spec-sidebar__endpoint--active');
 
