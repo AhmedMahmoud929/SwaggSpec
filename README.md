@@ -38,7 +38,7 @@ Swagger Spec Copy reads the **OpenAPI specification** behind Swagger UI and form
 **Requirements:** [Node.js](https://nodejs.org/) 20+, [Google Chrome](https://www.google.com/chrome/)
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/swagg-spec.git
+git clone https://github.com/AhmedMahmoud929/SwaggSpec.git
 cd swagg-spec
 npm install --legacy-peer-deps
 npm run build

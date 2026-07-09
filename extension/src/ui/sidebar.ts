@@ -40,9 +40,131 @@ let searchEl: HTMLInputElement | null = null;
 let currentGroups: TagGroup[] = [];
 let isOpen = true;
 
+/* ─── Helpers ─────────────────────────────────────────────── */
+
+function isMobile(): boolean {
+  return window.matchMedia('(max-width: 768px)').matches;
+}
+
+/* ─── Theme detection ───────────────────────────────────────── */
+
+/** Dark-mode class names commonly used by Swagger host pages */
+const DARK_CLASS_PATTERNS = [
+  'dark',
+  'dark-mode',
+  'dark-theme',
+  'theme-dark',
+  'darkmode',
+  'night-mode',
+  'inverted',
+];
+
+/**
+ * Decide whether the page is in dark mode via three signals (any one wins):
+ * 1. Known dark-mode CSS class on <html> or <body>
+ * 2. data-theme / data-color-scheme / color-scheme attribute
+ * 3. Computed background luminance of the Swagger UI root (< 0.18 → dark)
+ * 4. OS-level prefers-color-scheme: dark (lowest priority)
+ */
+function detectDark(): boolean {
+  const roots = [document.documentElement, document.body];
+
+  // 1. class names
+  for (const el of roots) {
+    const classList = Array.from(el.classList).map((c) => c.toLowerCase());
+    if (DARK_CLASS_PATTERNS.some((p) => classList.includes(p))) return true;
+  }
+
+  // 2. attributes
+  const themeAttrs = ['data-theme', 'data-color-scheme', 'data-bs-theme', 'color-scheme'];
+  for (const el of roots) {
+    for (const attr of themeAttrs) {
+      const val = el.getAttribute(attr)?.toLowerCase();
+      if (val && (val.includes('dark') || val === 'inverted')) return true;
+    }
+  }
+
+  // 3. Computed background luminance of the swagger-ui container
+  const swaggerRoot =
+    document.querySelector<HTMLElement>('.swagger-ui') ??
+    document.querySelector<HTMLElement>('#swagger-ui') ??
+    document.body;
+  const bg = window.getComputedStyle(swaggerRoot).backgroundColor;
+  const rgb = bg.match(/\d+/g)?.map(Number);
+  if (rgb && rgb.length >= 3) {
+    // Relative luminance (sRGB)
+    const [r, g, b] = rgb.map((c) => {
+      const s = c / 255;
+      return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    });
+    const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    if (luminance < 0.18) return true;
+  }
+
+  // 4. OS preference
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+/** Search icon SVGs — light and dark stroke colors */
+const SEARCH_ICON_LIGHT =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%237a8898' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E\") no-repeat 10px center";
+
+const SEARCH_ICON_DARK =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%236b7a99' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E\") no-repeat 10px center";
+
+/** Apply or remove dark theme on the sidebar element */
+function applyTheme(): void {
+  if (!sidebarEl) return;
+  const dark = detectDark();
+  if (dark) {
+    sidebarEl.setAttribute('data-theme', 'dark');
+  } else {
+    sidebarEl.removeAttribute('data-theme');
+  }
+  // Update search icon color to match theme
+  if (searchEl) {
+    searchEl.style.backgroundImage = dark ? SEARCH_ICON_DARK : SEARCH_ICON_LIGHT;
+  }
+}
+
+let themeObserver: MutationObserver | null = null;
+
+/** Watch for class/attribute changes on <html> and <body>, plus OS media query */
+function watchTheme(): void {
+  if (themeObserver) return;
+
+  themeObserver = new MutationObserver(() => applyTheme());
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class', 'data-theme', 'data-color-scheme', 'data-bs-theme', 'color-scheme'],
+  });
+  themeObserver.observe(document.body, {
+    attributes: true,
+    attributeFilter: ['class', 'data-theme', 'data-color-scheme', 'data-bs-theme', 'color-scheme'],
+  });
+
+  // Also watch the swagger-ui container's style changes (some themes change bg dynamically)
+  const swaggerRoot =
+    document.querySelector('.swagger-ui') ??
+    document.querySelector('#swagger-ui');
+  if (swaggerRoot) {
+    themeObserver.observe(swaggerRoot, {
+      attributes: true,
+      attributeFilter: ['class', 'style'],
+    });
+  }
+
+  // OS-level preference
+  window
+    .matchMedia('(prefers-color-scheme: dark)')
+    .addEventListener('change', () => applyTheme());
+}
+
 /* ─── Storage helpers ────────────────────────────────────────────── */
 
 async function loadOpenState(): Promise<boolean> {
+  // On desktop the sidebar is always open — don't load stored state.
+  if (!isMobile()) return true;
   try {
     const result = await chrome.storage.sync.get([STORAGE_KEY_OPEN]);
     return result[STORAGE_KEY_OPEN] !== false; // default open
@@ -85,14 +207,49 @@ function methodClass(method: string): string {
 
 /* ─── Scroll helpers ─────────────────────────────────────────────── */
 
+function expandControllerSection(section: Element): void {
+  const hasVisibleOps = section.querySelector('.opblock') !== null;
+  console.log('[swagg-spec] expandControllerSection:', {
+    hasVisibleOps,
+    sectionTag: parseTagFromDom(section)
+  });
+  if (!hasVisibleOps) {
+    const toggleBtn = section.querySelector<HTMLElement>('.expand-operation, .opblock-tag, h3, h4');
+    console.log('[swagg-spec] Section is collapsed. Clicking toggle button:', toggleBtn);
+    toggleBtn?.click();
+  }
+}
+
 function scrollToController(tagName: string): void {
+  console.log('[swagg-spec] scrollToController requested for:', tagName);
   const sections = document.querySelectorAll('.opblock-tag-section');
+  console.log('[swagg-spec] Total sections found in DOM:', sections.length);
+  
+  let found = false;
   for (const section of sections) {
     const name = parseTagFromDom(section);
-    if (name && name.toLowerCase() === tagName.toLowerCase()) {
-      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const isMatch = name && name.toLowerCase() === tagName.toLowerCase();
+    console.log('[swagg-spec] Checking section tag:', { parsedName: name, targetName: tagName, isMatch });
+    
+    if (isMatch) {
+      found = true;
+      expandControllerSection(section);
+      
+      // Wait for expand animation/rendering to settle before scrolling
+      setTimeout(() => {
+        const firstOp = section.querySelector('.opblock');
+        console.log('[swagg-spec] Scrolling to target. First endpoint found:', firstOp);
+        if (firstOp) {
+          firstOp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
       return;
     }
+  }
+  if (!found) {
+    console.error('[swagg-spec] No matching section found in DOM for tag:', tagName);
   }
 }
 
@@ -131,14 +288,6 @@ function buildSidebarDom(): void {
   sidebar.setAttribute('aria-label', 'API navigation');
   sidebar.setAttribute('role', 'navigation');
 
-  // Header
-  const header = document.createElement('div');
-  header.className = 'swagg-spec-sidebar__header';
-  header.innerHTML = `
-    <span class="swagg-spec-sidebar__logo" aria-hidden="true">${LOGO_SVG}</span>
-    <span class="swagg-spec-sidebar__title">API Navigator</span>
-  `;
-
   // Search
   const searchWrap = document.createElement('div');
   searchWrap.className = 'swagg-spec-sidebar__search-wrap';
@@ -158,7 +307,6 @@ function buildSidebarDom(): void {
   list.className = 'swagg-spec-sidebar__list';
   list.setAttribute('role', 'list');
 
-  sidebar.appendChild(header);
   sidebar.appendChild(searchWrap);
   sidebar.appendChild(list);
   document.body.appendChild(sidebar);
@@ -178,6 +326,10 @@ function buildSidebarDom(): void {
   listEl = list;
   searchEl = search;
 
+  // Apply theme immediately before anything else renders
+  applyTheme();
+  watchTheme();
+
   // Wire up toggle
   toggle.addEventListener('click', () => {
     isOpen = !isOpen;
@@ -195,6 +347,15 @@ function buildSidebarDom(): void {
 
 function applySidebarState(): void {
   if (!sidebarEl || !toggleEl) return;
+
+  // On desktop the sidebar is always visible — CSS handles it.
+  // Only manipulate classes on mobile.
+  if (!isMobile()) {
+    sidebarEl.classList.remove(COLLAPSED_CLASS);
+    toggleEl.classList.remove(COLLAPSED_CLASS);
+    document.body.classList.add(SIDEBAR_OPEN_CLASS);
+    return;
+  }
 
   if (isOpen) {
     sidebarEl.classList.remove(COLLAPSED_CLASS);
@@ -320,7 +481,7 @@ function renderGroups(groups: TagGroup[], query = ''): void {
 
     const details = document.createElement('details');
     details.className = 'swagg-spec-sidebar__group';
-    details.open = true; // default expanded; search overrides visibility
+    details.open = Boolean(q); // closed by default; automatically expands if there is an active search query
 
     // Summary / header
     const summary = document.createElement('summary');
@@ -349,6 +510,20 @@ function renderGroups(groups: TagGroup[], query = ''): void {
     navBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
+      scrollToController(group.name);
+    });
+
+    summary.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      console.log('[swagg-spec] Header click detected:', {
+        groupName: group.name,
+        targetElement: target,
+        isChevron: chevronSpan.contains(target)
+      });
+      if (chevronSpan.contains(target)) {
+        console.log('[swagg-spec] Chevron clicked, skipping scroll');
+        return;
+      }
       scrollToController(group.name);
     });
 

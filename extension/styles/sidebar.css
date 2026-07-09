@@ -4,8 +4,85 @@
    like a native part of the page.
    ═══════════════════════════════════════════════════════════════════ */
 
-/* ── Body shift when sidebar is open ──────────────────────────────── */
+/* ── CSS custom properties — light theme (default) ────────────────── */
 
+#swagg-spec-sidebar {
+  --ss-bg: #fafafa;
+  --ss-bg-header: #ffffff;
+  --ss-bg-group: #f6f8fa;
+  --ss-bg-input: #f6f8fa;
+  --ss-bg-input-foc: #ffffff;
+  --ss-bg-toggle: #ffffff;
+  --ss-bg-toggle-hv: #f0faf4;
+  --ss-bg-count: #e4e9ef;
+
+  --ss-border: #d1d9e0;
+  --ss-border-sub: #e8ecf0;
+  --ss-border-group: #edf0f3;
+
+  --ss-text: #3b4151;
+  --ss-text-sub: #4a5568;
+  --ss-text-muted: #97a4b3;
+  --ss-text-count: #5a6678;
+  --ss-text-accent: #1f7a4a;
+
+  --ss-accent: #49cc90;
+  --ss-accent-hv-bg: rgba(73, 204, 144, 0.08);
+  --ss-accent-hv-bg2: rgba(73, 204, 144, 0.10);
+  --ss-accent-hv-nav: rgba(73, 204, 144, 0.15);
+  --ss-accent-focus: rgba(73, 204, 144, 0.15);
+  --ss-accent-hl: rgba(73, 204, 144, 0.28);
+
+  --ss-icon-search: %237a8898;
+  /* URL-encoded #7a8898 for inline SVG */
+  --ss-scrollbar: #d1d9e0;
+  --ss-shadow: rgba(0, 0, 0, 0.07);
+  --ss-shadow-tog: rgba(0, 0, 0, 0.08);
+}
+
+/* ── CSS custom properties — dark theme ───────────────────────────── */
+
+#swagg-spec-sidebar[data-theme="dark"] {
+  --ss-bg: #1a1d23;
+  --ss-bg-header: #13151a;
+  --ss-bg-group: #1f2330;
+  --ss-bg-input: #252a36;
+  --ss-bg-input-foc: #2a3040;
+  --ss-bg-toggle: #1f2330;
+  --ss-bg-toggle-hv: #252a36;
+  --ss-bg-count: #2d3347;
+
+  --ss-border: #2e3448;
+  --ss-border-sub: #252a38;
+  --ss-border-group: #252a38;
+
+  --ss-text: #e2e8f0;
+  --ss-text-sub: #a0aec0;
+  --ss-text-muted: #6b7a99;
+  --ss-text-count: #8899bb;
+  --ss-text-accent: #68d391;
+
+  --ss-accent: #49cc90;
+  --ss-accent-hv-bg: rgba(73, 204, 144, 0.10);
+  --ss-accent-hv-bg2: rgba(73, 204, 144, 0.12);
+  --ss-accent-hv-nav: rgba(73, 204, 144, 0.18);
+  --ss-accent-focus: rgba(73, 204, 144, 0.20);
+  --ss-accent-hl: rgba(73, 204, 144, 0.25);
+
+  --ss-icon-search: %236b7a99;
+  --ss-scrollbar: #2e3448;
+  --ss-shadow: rgba(0, 0, 0, 0.30);
+  --ss-shadow-tog: rgba(0, 0, 0, 0.40);
+}
+
+/* ── Body shift — desktop always on, mobile only when open ────────── */
+
+/* Desktop: always shift content to make room for the fixed sidebar */
+.swagger-wrapper,
+#swagger-ui,
+.swagger-ui.swagger-container {
+  margin-left: 140px !important;
+}
 
 /* ── Sidebar panel ────────────────────────────────────────────────── */
 
@@ -16,21 +93,27 @@
   bottom: 0;
   width: 280px;
   z-index: 2147483600;
-  background: #fafafa;
-  border-right: 1px solid #d1d9e0;
+  background: var(--ss-bg);
+  border-right: 1px solid var(--ss-border);
   display: flex;
   flex-direction: column;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
     sans-serif;
   font-size: 13px;
-  color: #3b4151;
-  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.07);
+  color: var(--ss-text);
+  /* box-shadow: 2px 0 12px var(--ss-shadow); */
+  /* No transform on desktop — always visible */
   transform: translateX(0);
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
 }
 
+/* collapsed state only takes effect on mobile (see @media below) */
 #swagg-spec-sidebar.swagg-spec-sidebar--collapsed {
-  transform: translateX(-280px);
+  transform: translateX(0);
+  /* no-op on desktop */
 }
 
 /* ── Sidebar header ───────────────────────────────────────────────── */
@@ -40,9 +123,10 @@
   align-items: center;
   gap: 8px;
   padding: 14px 12px 10px;
-  border-bottom: 1px solid #e8ecf0;
+  border-bottom: 1px solid var(--ss-border-sub);
   flex-shrink: 0;
-  background: #ffffff;
+  background: var(--ss-bg-header);
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .swagg-spec-sidebar__logo {
@@ -65,21 +149,23 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #3b4151;
+  color: var(--ss-text);
   flex: 1;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color 0.2s ease;
 }
 
 /* ── Search input ─────────────────────────────────────────────────── */
 
 .swagg-spec-sidebar__search-wrap {
   padding: 10px 10px 8px;
-  border-bottom: 1px solid #e8ecf0;
+  border-bottom: 1px solid var(--ss-border-sub);
   flex-shrink: 0;
-  background: #ffffff;
+  background: var(--ss-bg-header);
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .swagg-spec-sidebar__search {
@@ -89,24 +175,28 @@
   width: 100%;
   height: 30px;
   padding: 0 10px 0 32px;
-  border: 1px solid #d1d9e0;
+  border: 1px solid var(--ss-border);
   border-radius: 6px;
-  background: #f6f8fa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%237a8898' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 10px center;
+  background-color: var(--ss-bg-input);
+  /* Search icon is re-painted dynamically by JS to match theme */
+  background-repeat: no-repeat;
+  background-position: 10px center;
   font-family: inherit;
   font-size: 12px;
-  color: #3b4151;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  color: var(--ss-text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background-color 0.2s ease, color 0.2s ease;
 }
 
 .swagg-spec-sidebar__search::placeholder {
-  color: #97a4b3;
+  color: var(--ss-text-muted);
 }
 
 .swagg-spec-sidebar__search:focus {
-  border-color: #85e89d;
-  box-shadow: 0 0 0 3px rgba(73, 204, 144, 0.15);
+  border-color: var(--ss-accent);
+  box-shadow: 0 0 0 3px var(--ss-accent-focus);
   outline: none;
-  background-color: #ffffff;
+  background-color: var(--ss-bg-input-foc);
 }
 
 /* ── Scrollable list ──────────────────────────────────────────────── */
@@ -128,7 +218,7 @@
 }
 
 .swagg-spec-sidebar__list::-webkit-scrollbar-thumb {
-  background: #d1d9e0;
+  background: var(--ss-scrollbar);
   border-radius: 3px;
 }
 
@@ -137,7 +227,7 @@
 .swagg-spec-sidebar__empty {
   padding: 24px 16px;
   text-align: center;
-  color: #97a4b3;
+  color: var(--ss-text-muted);
   font-size: 12px;
   line-height: 1.5;
 }
@@ -145,11 +235,13 @@
 /* ── Controller group (<details>) ─────────────────────────────────── */
 
 .swagg-spec-sidebar__group {
-  border-bottom: 1px solid #edf0f3;
+  border-bottom: 1px solid var(--ss-border-group);
+  transition: border-color 0.2s ease;
 }
 
 .swagg-spec-sidebar__group[open] {
-  background: #f6f8fa;
+  background: var(--ss-bg-group);
+  transition: background 0.2s ease;
 }
 
 /* Prevent default marker */
@@ -161,10 +253,10 @@
   padding: 8px 10px 8px 10px;
   cursor: pointer;
   user-select: none;
-  transition: background 0.12s ease;
+  transition: background 0.12s ease, color 0.12s ease;
   font-weight: 600;
   font-size: 12.5px;
-  color: #3b4151;
+  color: var(--ss-text);
   letter-spacing: 0.01em;
   line-height: 1.3;
 }
@@ -178,8 +270,8 @@
 }
 
 .swagg-spec-sidebar__group-header:hover {
-  background: rgba(73, 204, 144, 0.08);
-  color: #1f7a4a;
+  background: var(--ss-accent-hv-bg);
+  color: var(--ss-text-accent);
 }
 
 /* Chevron icon that rotates on open */
@@ -187,8 +279,8 @@
   width: 14px;
   height: 14px;
   flex-shrink: 0;
-  color: #97a4b3;
-  transition: transform 0.2s ease;
+  color: var(--ss-text-muted);
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .swagg-spec-sidebar__group[open] .swagg-spec-sidebar__chevron {
@@ -206,11 +298,12 @@
 .swagg-spec-sidebar__group-count {
   font-size: 10px;
   font-weight: 500;
-  background: #e4e9ef;
-  color: #5a6678;
+  background: var(--ss-bg-count);
+  color: var(--ss-text-count);
   border-radius: 10px;
   padding: 1px 6px;
   flex-shrink: 0;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 /* Navigate-to-section button inside header */
@@ -222,15 +315,15 @@
   width: 20px;
   height: 20px;
   border-radius: 4px;
-  color: #97a4b3;
+  color: var(--ss-text-muted);
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.12s ease, color 0.12s ease;
 }
 
 .swagg-spec-sidebar__nav-btn:hover {
-  background: rgba(73, 204, 144, 0.15);
-  color: #1f7a4a;
+  background: var(--ss-accent-hv-nav);
+  color: var(--ss-text-accent);
 }
 
 /* ── Endpoint rows ────────────────────────────────────────────────── */
@@ -245,24 +338,24 @@
   gap: 7px;
   padding: 5px 10px 5px 26px;
   cursor: pointer;
-  transition: background 0.1s ease;
+  transition: background 0.1s ease, color 0.1s ease;
   border: none;
   background: none;
   width: 100%;
   text-align: left;
   font-family: inherit;
   font-size: 11.5px;
-  color: #4a5568;
+  color: var(--ss-text-sub);
   line-height: 1.3;
 }
 
 .swagg-spec-sidebar__endpoint:hover {
-  background: rgba(73, 204, 144, 0.1);
-  color: #1f7a4a;
+  background: var(--ss-accent-hv-bg2);
+  color: var(--ss-text-accent);
 }
 
 .swagg-spec-sidebar__endpoint:focus-visible {
-  outline: 2px solid #49cc90;
+  outline: 2px solid var(--ss-accent);
   outline-offset: -2px;
 }
 
@@ -302,7 +395,7 @@
 
 .swagg-spec-sidebar__method--patch {
   background: #50e3c2;
-  color: #2d3748;
+  color: #1a2e28;
 }
 
 .swagg-spec-sidebar__method--head {
@@ -325,11 +418,12 @@
   white-space: nowrap;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-size: 10.5px;
-  color: #4a5568;
+  color: var(--ss-text-sub);
+  transition: color 0.1s ease;
 }
 
 .swagg-spec-sidebar__endpoint:hover .swagg-spec-sidebar__path {
-  color: #1f7a4a;
+  color: var(--ss-text-accent);
 }
 
 /* ── Hidden by search ─────────────────────────────────────────────── */
@@ -339,7 +433,7 @@
   display: none !important;
 }
 
-/* ── Toggle button (opens/closes sidebar) ─────────────────────────── */
+/* ── Toggle button — hidden on desktop, visible only on mobile ─────── */
 
 #swagg-spec-sidebar-toggle {
   position: fixed;
@@ -349,47 +443,84 @@
   z-index: 2147483601;
   width: 20px;
   height: 52px;
-  border: 1px solid #d1d9e0;
+  border: 1px solid var(--ss-border);
   border-left: none;
   border-radius: 0 8px 8px 0;
-  background: #ffffff;
+  background: var(--ss-bg-toggle);
   cursor: pointer;
-  display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 3px 0 8px rgba(0, 0, 0, 0.08);
-  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.15s ease;
+  box-shadow: 3px 0 8px var(--ss-shadow-tog);
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.15s ease,
+    border-color 0.2s ease;
   padding: 0;
+  /* Hidden on desktop — shown only on mobile via @media */
+  display: none;
 }
 
 #swagg-spec-sidebar-toggle:hover {
-  background: #f0faf4;
+  background: var(--ss-bg-toggle-hv);
 }
 
 #swagg-spec-sidebar-toggle.swagg-spec-sidebar--collapsed {
   left: 0;
-  border-left: 1px solid #d1d9e0;
-  border-right: 1px solid #d1d9e0;
+  border-left: 1px solid var(--ss-border);
+  border-right: 1px solid var(--ss-border);
   border-radius: 0 8px 8px 0;
 }
 
 .swagg-spec-toggle-icon {
-  color: #7a8898;
+  color: var(--ss-text-muted);
   transition: transform 0.25s ease, color 0.15s ease;
 }
 
 #swagg-spec-sidebar-toggle:hover .swagg-spec-toggle-icon {
-  color: #1f7a4a;
+  color: var(--ss-text-accent);
 }
 
 #swagg-spec-sidebar-toggle.swagg-spec-sidebar--collapsed .swagg-spec-toggle-icon {
   transform: rotate(180deg);
 }
 
+/* ── Mobile (≤768px) — sidebar is collapsible ─────────────────────── */
+
+@media (max-width: 768px) {
+
+  /* Remove the always-on body shift */
+  .swagger-wrapper,
+  #swagger-ui,
+  .swagger-ui {
+    margin-left: 0 !important;
+  }
+
+  /* Shift content only when sidebar is open on mobile */
+  body.swagg-spec-sidebar-open .swagger-wrapper,
+  body.swagg-spec-sidebar-open #swagger-ui,
+  body.swagg-spec-sidebar-open .swagger-ui {
+    margin-left: 280px !important;
+    transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Sidebar starts collapsed on mobile */
+  #swagg-spec-sidebar {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  #swagg-spec-sidebar.swagg-spec-sidebar--collapsed {
+    transform: translateX(-280px);
+  }
+
+  /* Show the toggle button on mobile */
+  #swagg-spec-sidebar-toggle {
+    display: flex;
+  }
+}
+
 /* ── Highlight matched text ───────────────────────────────────────── */
 
 .swagg-spec-highlight {
-  background: rgba(73, 204, 144, 0.28);
+  background: var(--ss-accent-hl);
   border-radius: 2px;
   font-style: normal;
 }

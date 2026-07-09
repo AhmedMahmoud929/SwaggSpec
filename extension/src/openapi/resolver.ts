@@ -283,7 +283,16 @@ export function parseTagFromDom(section: Element): string | null {
     section.querySelector('[data-tag]') ??
     section.querySelector('h3 span, h4 span');
 
-  const tagText = tagEl?.textContent?.trim();
+  if (!tagEl) return null;
+
+  // Clone element to avoid mutating the live DOM
+  const clone = tagEl.cloneNode(true) as HTMLElement;
+  
+  // Remove copy button/actions injected by the extension
+  const actions = clone.querySelectorAll('.swagg-spec-actions, .swagg-spec-copy-btn');
+  actions.forEach((el) => el.remove());
+
+  const tagText = clone.textContent?.trim();
   if (!tagText) return null;
 
   return tagText.replace(/\s*\d+\s*$/, '').trim();
