@@ -1,5 +1,6 @@
 import { clearSpecCache } from '../openapi/resolver';
 import { injectButtons } from './inject';
+import { refreshSidebar } from '../ui/sidebar';
 
 let observer: MutationObserver | null = null;
 let debounceTimer: number | null = null;
@@ -12,6 +13,7 @@ function scheduleInject(): void {
   debounceTimer = window.setTimeout(() => {
     debounceTimer = null;
     injectButtons();
+    void refreshSidebar();
   }, 150);
 }
 

@@ -1,0 +1,395 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Swagg-Spec Sidebar
+   Matches Swagger-UI's own color palette & font stack so it feels
+   like a native part of the page.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Body shift when sidebar is open ──────────────────────────────── */
+
+
+/* ── Sidebar panel ────────────────────────────────────────────────── */
+
+#swagg-spec-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  z-index: 2147483600;
+  background: #fafafa;
+  border-right: 1px solid #d1d9e0;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  font-size: 13px;
+  color: #3b4151;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.07);
+  transform: translateX(0);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#swagg-spec-sidebar.swagg-spec-sidebar--collapsed {
+  transform: translateX(-280px);
+}
+
+/* ── Sidebar header ───────────────────────────────────────────────── */
+
+.swagg-spec-sidebar__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 12px 10px;
+  border-bottom: 1px solid #e8ecf0;
+  flex-shrink: 0;
+  background: #ffffff;
+}
+
+.swagg-spec-sidebar__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #85e89d 0%, #38a169 100%);
+  flex-shrink: 0;
+}
+
+.swagg-spec-sidebar__logo svg {
+  display: block;
+}
+
+.swagg-spec-sidebar__title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #3b4151;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Search input ─────────────────────────────────────────────────── */
+
+.swagg-spec-sidebar__search-wrap {
+  padding: 10px 10px 8px;
+  border-bottom: 1px solid #e8ecf0;
+  flex-shrink: 0;
+  background: #ffffff;
+}
+
+.swagg-spec-sidebar__search {
+  all: unset;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 30px;
+  padding: 0 10px 0 32px;
+  border: 1px solid #d1d9e0;
+  border-radius: 6px;
+  background: #f6f8fa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%237a8898' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") no-repeat 10px center;
+  font-family: inherit;
+  font-size: 12px;
+  color: #3b4151;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.swagg-spec-sidebar__search::placeholder {
+  color: #97a4b3;
+}
+
+.swagg-spec-sidebar__search:focus {
+  border-color: #85e89d;
+  box-shadow: 0 0 0 3px rgba(73, 204, 144, 0.15);
+  outline: none;
+  background-color: #ffffff;
+}
+
+/* ── Scrollable list ──────────────────────────────────────────────── */
+
+.swagg-spec-sidebar__list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px 0 16px;
+  scroll-behavior: smooth;
+}
+
+.swagg-spec-sidebar__list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.swagg-spec-sidebar__list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.swagg-spec-sidebar__list::-webkit-scrollbar-thumb {
+  background: #d1d9e0;
+  border-radius: 3px;
+}
+
+/* ── Empty / no-results state ─────────────────────────────────────── */
+
+.swagg-spec-sidebar__empty {
+  padding: 24px 16px;
+  text-align: center;
+  color: #97a4b3;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ── Controller group (<details>) ─────────────────────────────────── */
+
+.swagg-spec-sidebar__group {
+  border-bottom: 1px solid #edf0f3;
+}
+
+.swagg-spec-sidebar__group[open] {
+  background: #f6f8fa;
+}
+
+/* Prevent default marker */
+.swagg-spec-sidebar__group-header {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px 8px 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s ease;
+  font-weight: 600;
+  font-size: 12.5px;
+  color: #3b4151;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+}
+
+.swagg-spec-sidebar__group-header::-webkit-details-marker {
+  display: none;
+}
+
+.swagg-spec-sidebar__group-header::marker {
+  display: none;
+}
+
+.swagg-spec-sidebar__group-header:hover {
+  background: rgba(73, 204, 144, 0.08);
+  color: #1f7a4a;
+}
+
+/* Chevron icon that rotates on open */
+.swagg-spec-sidebar__chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: #97a4b3;
+  transition: transform 0.2s ease;
+}
+
+.swagg-spec-sidebar__group[open] .swagg-spec-sidebar__chevron {
+  transform: rotate(90deg);
+}
+
+.swagg-spec-sidebar__group-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.swagg-spec-sidebar__group-count {
+  font-size: 10px;
+  font-weight: 500;
+  background: #e4e9ef;
+  color: #5a6678;
+  border-radius: 10px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+}
+
+/* Navigate-to-section button inside header */
+.swagg-spec-sidebar__nav-btn {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  color: #97a4b3;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.swagg-spec-sidebar__nav-btn:hover {
+  background: rgba(73, 204, 144, 0.15);
+  color: #1f7a4a;
+}
+
+/* ── Endpoint rows ────────────────────────────────────────────────── */
+
+.swagg-spec-sidebar__endpoints {
+  padding: 2px 0 6px;
+}
+
+.swagg-spec-sidebar__endpoint {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px 5px 26px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  font-size: 11.5px;
+  color: #4a5568;
+  line-height: 1.3;
+}
+
+.swagg-spec-sidebar__endpoint:hover {
+  background: rgba(73, 204, 144, 0.1);
+  color: #1f7a4a;
+}
+
+.swagg-spec-sidebar__endpoint:focus-visible {
+  outline: 2px solid #49cc90;
+  outline-offset: -2px;
+}
+
+/* HTTP method badge */
+.swagg-spec-sidebar__method {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+
+.swagg-spec-sidebar__method--get {
+  background: #61affe;
+}
+
+.swagg-spec-sidebar__method--post {
+  background: #49cc90;
+}
+
+.swagg-spec-sidebar__method--put {
+  background: #fca130;
+}
+
+.swagg-spec-sidebar__method--delete {
+  background: #f93e3e;
+}
+
+.swagg-spec-sidebar__method--patch {
+  background: #50e3c2;
+  color: #2d3748;
+}
+
+.swagg-spec-sidebar__method--head {
+  background: #9012fe;
+}
+
+.swagg-spec-sidebar__method--options {
+  background: #0d5aa7;
+}
+
+.swagg-spec-sidebar__method--trace {
+  background: #785446;
+}
+
+.swagg-spec-sidebar__path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 10.5px;
+  color: #4a5568;
+}
+
+.swagg-spec-sidebar__endpoint:hover .swagg-spec-sidebar__path {
+  color: #1f7a4a;
+}
+
+/* ── Hidden by search ─────────────────────────────────────────────── */
+
+.swagg-spec-sidebar__group[hidden],
+.swagg-spec-sidebar__endpoint[hidden] {
+  display: none !important;
+}
+
+/* ── Toggle button (opens/closes sidebar) ─────────────────────────── */
+
+#swagg-spec-sidebar-toggle {
+  position: fixed;
+  top: 50%;
+  left: 280px;
+  transform: translateY(-50%);
+  z-index: 2147483601;
+  width: 20px;
+  height: 52px;
+  border: 1px solid #d1d9e0;
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  background: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 3px 0 8px rgba(0, 0, 0, 0.08);
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1), background 0.15s ease;
+  padding: 0;
+}
+
+#swagg-spec-sidebar-toggle:hover {
+  background: #f0faf4;
+}
+
+#swagg-spec-sidebar-toggle.swagg-spec-sidebar--collapsed {
+  left: 0;
+  border-left: 1px solid #d1d9e0;
+  border-right: 1px solid #d1d9e0;
+  border-radius: 0 8px 8px 0;
+}
+
+.swagg-spec-toggle-icon {
+  color: #7a8898;
+  transition: transform 0.25s ease, color 0.15s ease;
+}
+
+#swagg-spec-sidebar-toggle:hover .swagg-spec-toggle-icon {
+  color: #1f7a4a;
+}
+
+#swagg-spec-sidebar-toggle.swagg-spec-sidebar--collapsed .swagg-spec-toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* ── Highlight matched text ───────────────────────────────────────── */
+
+.swagg-spec-highlight {
+  background: rgba(73, 204, 144, 0.28);
+  border-radius: 2px;
+  font-style: normal;
+}
